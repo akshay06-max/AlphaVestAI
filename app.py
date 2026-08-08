@@ -60,6 +60,19 @@ with st.sidebar:
     st.caption("AI Investment Advisory & Financial Research")
     st.divider()
 
+    # 0. AI Provider & Key Settings (for Streamlit Cloud & local)
+    with st.expander("🔑 **AI Provider & API Key**", expanded=not bool(os.getenv("GROQ_API_KEY") or os.getenv("OPENROUTER_API_KEY"))):
+        curr_groq = os.getenv("GROQ_API_KEY", "")
+        masked_groq = (curr_groq[:7] + "..." + curr_groq[-4:]) if len(curr_groq) > 12 else ""
+        st.caption(f"Active Provider: **{'Groq (Llama 3.3 70B)' if curr_groq else 'OpenRouter / Default'}**")
+        input_groq = st.text_input("Groq API Key (100% Free - 14.4k req/day)", value=curr_groq, type="password", placeholder="gsk_...", help="Get a free key instantly at https://console.groq.com/keys")
+        if st.button("💾 Save & Activate API Key"):
+            if input_groq.strip():
+                os.environ["GROQ_API_KEY"] = input_groq.strip()
+                os.environ["GROQ_MODEL"] = "llama-3.3-70b-versatile"
+                st.success("✅ Groq Llama 3.3 70B activated successfully!")
+                st.rerun()
+
     # 1. Investor Profile & Long-Term Memory (Module 9)
     with st.expander("👤 **Investor Profile & Memory**", expanded=False):
         prof_row = get_preference(conn, st.session_state.client_name)

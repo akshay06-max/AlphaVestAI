@@ -75,7 +75,10 @@ with st.sidebar:
 
     # 1. Investor Profile & Long-Term Memory (Module 9)
     with st.expander("👤 **Investor Profile & Memory**", expanded=False):
-        prof_row = get_preference(conn, st.session_state.client_name)
+        try:
+            prof_row = get_preference(conn, st.session_state.client_name)
+        except Exception:
+            prof_row = None
         saved_risk = prof_row[1] if prof_row and prof_row[1] else "Growth / Moderate"
         saved_ind = prof_row[2] if prof_row and prof_row[2] else "Technology, AI, Semiconductors, Clean Energy"
         saved_freq = prof_row[3] if prof_row and prof_row[3] else "None yet"
@@ -176,7 +179,10 @@ with st.sidebar:
 
     # 5. Archived Reports (Module 12)
     with st.expander("📚 **Archived Reports (Module 12)**", expanded=False):
-        archived = list_archived_reports(conn, st.session_state.client_name)
+        try:
+            archived = list_archived_reports(conn, st.session_state.client_name)
+        except Exception:
+            archived = []
         if archived:
             for rep_id, comp_name, r_type, s_text, dt in archived[:5]:
                 st.markdown(f"**{comp_name}** ({r_type}) — *{dt}*")

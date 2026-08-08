@@ -5,7 +5,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
-from langchain.tools import tool
+try:
+    from langchain_core.tools import tool
+except (ImportError, ModuleNotFoundError):
+    from langchain.tools import tool
 from config import llm
 from models.schemas import EmailDraft
 

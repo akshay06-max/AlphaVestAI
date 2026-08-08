@@ -2,7 +2,10 @@
 import re
 import json
 import math
-from langchain.tools import tool
+try:
+    from langchain_core.tools import tool
+except (ImportError, ModuleNotFoundError):
+    from langchain.tools import tool
 import pandas as pd
 
 

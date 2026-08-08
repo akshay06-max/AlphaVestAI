@@ -2,7 +2,10 @@
 import requests
 import re
 from bs4 import BeautifulSoup
-from langchain.tools import Tool
+try:
+    from langchain_core.tools import Tool
+except (ImportError, ModuleNotFoundError):
+    from langchain.tools import Tool
 from langchain_community.tools import DuckDuckGoSearchRun
 
 # 1. Resilient Wikipedia Tool with proper User-Agent header

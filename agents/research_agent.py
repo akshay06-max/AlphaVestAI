@@ -1,5 +1,13 @@
 """Company Research Agent — Module 3 (combines news + Wikipedia + financial tools)."""
-from langchain.agents import create_react_agent, AgentExecutor
+try:
+    from langchain.agents import create_react_agent, AgentExecutor
+except (ImportError, ModuleNotFoundError):
+    try:
+        from langchain_classic.agents import create_react_agent, AgentExecutor
+    except (ImportError, ModuleNotFoundError):
+        create_react_agent = None
+        AgentExecutor = None
+
 from langchain_core.prompts import PromptTemplate
 
 from config import llm
@@ -35,15 +43,19 @@ Question: {input}
 {agent_scratchpad}
 """)
 
-_agent = create_react_agent(llm, tools, _REACT_PROMPT)
-
-research_executor = AgentExecutor(
-    agent=_agent,
-    tools=tools,
-    verbose=False,
-    handle_parsing_errors=True,
-    max_iterations=6,
-)
+research_executor = None
+if create_react_agent is not None and AgentExecutor is not None:
+    try:
+        _agent = create_react_agent(llm, tools, _REACT_PROMPT)
+        research_executor = AgentExecutor(
+            agent=_agent,
+            tools=tools,
+            verbose=False,
+            handle_parsing_errors=True,
+            max_iterations=6,
+        )
+    except Exception:
+        research_executor = None
 
 
 def research_company(query: str) -> str:

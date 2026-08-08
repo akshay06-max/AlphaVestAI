@@ -1,14 +1,21 @@
 """PDF Report Generator for AlphaVest Capital using ReportLab — Page 18 Download Requirements."""
 import io
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+try:
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+    REPORTLAB_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    REPORTLAB_AVAILABLE = False
+
 from models.schemas import InvestmentReport, CompanyComparison
 
 
 def generate_investment_report_pdf(report: InvestmentReport) -> bytes:
     """Generate a clean, professional PDF from an InvestmentReport."""
+    if not REPORTLAB_AVAILABLE:
+        return f"AlphaVest Investment Report: {report.company_name}\n\n{report.investment_summary}".encode("utf-8")
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -140,6 +147,8 @@ def generate_investment_report_pdf(report: InvestmentReport) -> bytes:
 
 def generate_comparison_pdf(comparison: CompanyComparison, raw_research: dict = None) -> bytes:
     """Generate a clean PDF for multi-company comparisons."""
+    if not REPORTLAB_AVAILABLE:
+        return f"AlphaVest Comparison: {', '.join(comparison.companies_compared)}\n\n{comparison.comparison_summary}".encode("utf-8")
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,

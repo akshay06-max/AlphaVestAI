@@ -1,4 +1,5 @@
 """SQLite persistent conversation memory + long-term investor profile + report archive — Module 9 & 12."""
+import os
 import sqlite3
 from datetime import datetime
 import json

@@ -198,48 +198,64 @@ st.caption(
 )
 
 # Illustrative Prompt Quick Shortcuts (Handbook Page 16, 17, 18)
+clicked_prompt = None
 col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
     if st.button("🏢 Research NVIDIA"):
-        st.session_state.messages.append({"role": "user", "content": "Research NVIDIA and summarize business overview, revenue sources, and competitors."})
-        st.rerun()
+        clicked_prompt = "Research NVIDIA and summarize business overview, revenue sources, and competitors."
 with col2:
     if st.button("⚖️ Compare Mega-Caps"):
-        st.session_state.messages.append({"role": "user", "content": "Compare Microsoft, Google, Amazon, and Meta."})
-        st.rerun()
+        clicked_prompt = "Compare Microsoft, Google, Amazon, and Meta."
 with col3:
     if st.button("📊 Calculate CAGR"):
-        st.session_state.messages.append({"role": "user", "content": "Calculate CAGR for a company that grew from 100 to 250 over 5 years."})
-        st.rerun()
+        clicked_prompt = "Calculate CAGR for a company that grew from 100 to 250 over 5 years."
 with col4:
     if st.button("📄 Risk Factors in PDF"):
-        st.session_state.messages.append({"role": "user", "content": "Summarize the risk factors and future plans from the uploaded annual report."})
-        st.rerun()
+        clicked_prompt = "Summarize the risk factors and future plans from the uploaded annual report."
 with col5:
     if st.button("📧 Email Client Brief"):
-        st.session_state.messages.append({"role": "user", "content": "Email today's investment report to the client."})
-        st.rerun()
+        clicked_prompt = "Email today's investment report to the client."
 
 st.divider()
 
-# Display Chat History
-for msg in st.session_state.messages:
+# Check for pending / newly submitted query
+chat_input_val = st.chat_input("Ask about a company, request comparison, calculate CAGR/ROI, or say 'Remember that I prefer...'")
+
+# Detect if the last message in chat history was an unanswered user query
+has_unanswered = (
+    len(st.session_state.messages) > 0
+    and st.session_state.messages[-1].get("role") == "user"
+)
+
+active_query = None
+is_replay = False
+
+if chat_input_val:
+    active_query = chat_input_val
+elif clicked_prompt:
+    active_query = clicked_prompt
+elif has_unanswered:
+    active_query = st.session_state.messages[-1].get("content")
+    is_replay = True
+
+# Display Chat History (if replaying an unanswered message, don't double-render it in history loop)
+history_to_display = st.session_state.messages[:-1] if (is_replay and has_unanswered) else st.session_state.messages
+for msg in history_to_display:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# Chat Input Box
-user_input = st.chat_input("Ask about a company, request comparison, calculate CAGR/ROI, or say 'Remember that I prefer...'")
+if active_query:
+    # 1. Display User Message if new
+    if not is_replay:
+        st.session_state.messages.append({"role": "user", "content": active_query})
+        save_message(conn, st.session_state.session_id, "user", active_query)
 
-if user_input:
-    # 1. Display User Message
-    st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
-        st.markdown(user_input)
-    save_message(conn, st.session_state.session_id, "user", user_input)
+        st.markdown(active_query)
 
     # 2. Module 9 — Long-Term Memory Keyword Trigger
-    if "remember that" in user_input.lower():
-        preference_snippet = user_input.replace("remember that", "").replace("Remember that", "").strip()
+    if "remember that" in active_query.lower():
+        preference_snippet = active_query.replace("remember that", "").replace("Remember that", "").strip()
         save_preference(conn, st.session_state.client_name, preferred_industries=preference_snippet)
         reply = f"🧠 **Got it!** I've updated your investor profile and remembered your preference: *'{preference_snippet}'*."
         with st.chat_message("assistant"):
@@ -252,7 +268,7 @@ if user_input:
         try:
             with st.spinner("🔍 AlphaVest agents executing multi-source financial research..."):
                 outcome = route_query(
-                    user_input,
+                    active_query,
                     retriever=st.session_state.retriever,
                     client_name=st.session_state.client_name,
                     client_email=c_email,
